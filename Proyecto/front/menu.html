@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>MealMind App</title>
+    <style>
+        /* CSS para darle un poco de estilo */
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background-color: #f0f0f0;
+        }
+        .container {
+            text-align: center;
+            background-color: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
+        }
+        input {
+            padding: 10px;
+            width: 200px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+        button {
+            padding: 10px;
+            border: none;
+            background-color: #28a745;
+            color: white;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+        button:hover {
+            background-color: #218838;
+        }
+        .output {
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>MealMind App</h1>
+        <input type="text" id="userInput" placeholder="Escribe tu mensaje aquí...">
+        <button onclick="getMenu()">Obtener Menú</button>
+        <div class="output" id="menuOutput"></div>
+    </div>
+
+    <script>
+        async function getMenu() {
+            const userInput = document.getElementById('userInput').value;
+            const menuOutput = document.getElementById('menuOutput');
+
+            try {
+                // Llamada al endpoint /mealmind/classify
+                const classifyResponse = await fetch('http://localhost:8080/mealmind/classify', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ prompt: userInput }),
+                });
+
+                const classifyData = await classifyResponse.json();
+                const type = classifyData.result; // 'adelgazar' o 'engordar'
+
+                // Llamada al endpoint /mealmind/generateMenu con el tipo de menú
+                const generateMenuResponse = await fetch(`http://localhost:8080/mealmind/generateMenu?tipo_menu=${type}`, {
+                    method: 'GET',
+                });
+
+                const menuData = await generateMenuResponse.json();
+
+                // Muestra el menú en la interfaz
+                menuOutput.innerHTML = '<h2>Menú sugerido:</h2>';
+                menuData.menus.forEach(menu => {
+                    menuOutput.innerHTML += `<p>${menu}</p>`;
+                });
+
+            } catch (error) {
+                console.error('Error:', error);
+                menuOutput.textContent = 'Error al obtener el menú. Inténtalo de nuevo.';
+            }
+        }
+    </script>
+</body>
+</html>
